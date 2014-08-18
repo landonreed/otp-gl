@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.2.2/mapbox-gl.js'></script>
+    <link  rel="stylesheet" href="jquery-ui-bootstrap/assets/css/bootstrap.min.css"></link>
+    <script type="text/javascript" src="jquery-ui-bootstrap/assets/js/vendor/jquery-1.9.1.min.js"></script>
+    <link rel="stylesheet" href="css/custom-theme/jquery-ui-1.10.3.custom.css"></link>
+    <link rel="stylesheet" href="css/custom-theme/jquery-ui-1.10.3.ie.css"></link>
+    <script type="text/javascript" src="jquery-ui-bootstrap/assets/js/vendor/bootstrap.js"></script>
+    <script type="text/javascript" src="js/modernizr.js"></script>
+    <script type="text/javascript" src="js/moment.js"></script>
+    <script type="text/javascript" src="jquery-ui-bootstrap/assets/js/vendor/jquery-ui-1.10.3.custom.min.js"></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.2.2/mapbox-gl.css' rel='stylesheet' />
+
+
+        <script type="text/javascript" src="js/plan.js"></script>
+        <script type="text/javascript" src="js/polyline.js"></script>
+
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+  <div id="modal-simple">
+  <div id="planner-options-desc-row">
+    <div id="planner-options-desc"></div>
+  </div>
+    <!-- <form class="form-horizontal" role="form">
+      <div class="form-group">
+        <label for="origin" class="col-sm-2 control-label">From</label>
+        <div class="col-sm-10">
+          <input type="origin" class="form-control" id="origin" placeholder="123 Main St">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="destination" class="col-sm-2 control-label">To</label>
+        <div class="col-sm-10">
+          <input type="destination" class="form-control" id="destination" placeholder="400 Peachtree St">
+        </div>
+      </div>
+    </form> -->
+
+    <form role="form" class="planner-options-form validateDontSubmit" id="planner-options-form">
+          <div class="input-group input-group-lg planner-options-inputgroup-from" id="planner-options-inputgroup-from">
+            <label class="input-group-addon planner-options-input-addon required label-from" for="planner-options-from">From</label>
+            <input id="planner-options-from" type="text" title="From" aria-required="true" class="form-control" placeholder="Train station, bus stop, or address" x-webkit-speech="x-webkit-speech" required="required" />
+            <input id="planner-options-from-latlng" type="hidden" />
+          </div>
+          <div class="input-group input-group-lg hidden" aria-hidden="true" id="planner-options-inputgroup-via">
+            <label class="input-group-addon planner-options-input-addon label-via" for="planner-options-via">Via</label>
+            <input id="planner-options-via" type="text" title="Via" aria-required="true" class="form-control" placeholder="Train station, bus stop, or address" x-webkit-speech="x-webkit-speech" />
+            <div id="planner-options-via-autocompletecontainer"></div>
+            <input id="planner-options-via-latlng" type="hidden" />
+          </div>
+          <div class="input-group input-group-lg planner-options-inputgroup-dest" id="planner-options-inputgroup-dest">
+            <label class="input-group-addon planner-options-input-addon required label-dest" for="planner-options-dest">To</label>
+            <input id="planner-options-dest" type="text" title="To" aria-required="true" class="form-control" placeholder="Train station, bus stop, or address" x-webkit-speech="x-webkit-speech" required="required" />
+            <input id="planner-options-dest-latlng" type="hidden" />
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-5 col-md-5 col-lg-5">
+              <div class="input-group input-group-lg planner-options-dateinput" id="planner-options-inputgroup-time">
+                <label class="input-group-addon planner-options-input-addon label-time" for="planner-options-time">Time</label>
+                <input id="planner-options-time" type="time" title="Time" aria-described-by="planner-options-timeformat" aria-required="true" class="form-control" required="required" />
+                <div class="input-group-addon planner-options-input-addon" id="planner-options-timeformat">h:mma</div>
+              </div>
+            </div>
+          </div>
+          <!-- row -->
+          <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+              <div class="input-group input-group-lg planner-options-dateinput" id="planner-options-inputgroup-date">
+                <label class="input-group-addon planner-options-input-addon label-date" for="planner-options-date">Date</label>
+                <input id="planner-options-date" type="text" title="Date" aria-label="Datumkiezer, gebruik Ctrl en pijltjes om te navigeren" aria-required="true" class="form-control" required="required"  />
+              </div>
+            </div>
+          </div>
+          <!-- <div id="planner-options-date-messages" class="accessibility-helper" aria-live="assertive" aria-atomic="true" aria-relevant="additions"></div> -->
+
+        </form>
+  </div>
+
+  <div class="planner-advice-modal hidden" id="planner-advice-container" aria-hidden="true" style="display: none;">
+                    <div class="row">
+                      <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 hidden-print">
+                        <div class="btn-group-vertical" id="planner-advice-list" data-toggle="buttons">
+                        </div>
+                      </div>
+                      <div class="clearfix visible-xs"></div>
+                      <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                        <ul class="list-group" id="planner-leg-list"><</ul>
+                      </div>
+                    </div>
+                  </div>
+</body>
+</html>
