@@ -98,6 +98,7 @@ function addMarker(point, title, symbol){
 
   
   map.addSource('markers', markers);
+  map.flyTo(point, 13, 0, {duration:1000})
 }
 
 $(document).ready(function(){
