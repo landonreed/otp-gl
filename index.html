@@ -47,25 +47,25 @@
     </form> -->
 
     <form role="form" class="planner-options-form validateDontSubmit" id="planner-options-form">
-          <div class="input-group input-group-lg planner-options-inputgroup-from" id="planner-options-inputgroup-from">
-            <label class="input-group-addon planner-options-input-addon required label-from" for="planner-options-from">From</label>
+          <div class="input-group input-group-sm planner-options-inputgroup-from" id="planner-options-inputgroup-from">
+            <label class="input-group-addon planner-options-input-addon required label-from" for="planner-options-from"><span class="glyphicon glyphicon-play-circle"></span></label>
             <input id="planner-options-from" type="text" title="From" aria-required="true" class="form-control" placeholder="Train station, bus stop, or address" x-webkit-speech="x-webkit-speech" required="required" />
             <input id="planner-options-from-latlng" type="hidden" />
           </div>
-          <div class="input-group input-group-lg hidden" aria-hidden="true" id="planner-options-inputgroup-via">
+          <div class="input-group input-group-sm hidden" aria-hidden="true" id="planner-options-inputgroup-via">
             <label class="input-group-addon planner-options-input-addon label-via" for="planner-options-via">Via</label>
             <input id="planner-options-via" type="text" title="Via" aria-required="true" class="form-control" placeholder="Train station, bus stop, or address" x-webkit-speech="x-webkit-speech" />
             <div id="planner-options-via-autocompletecontainer"></div>
             <input id="planner-options-via-latlng" type="hidden" />
           </div>
-          <div class="input-group input-group-lg planner-options-inputgroup-dest" id="planner-options-inputgroup-dest">
-            <label class="input-group-addon planner-options-input-addon required label-dest" for="planner-options-dest">To</label>
+          <div class="input-group input-group-sm planner-options-inputgroup-dest" id="planner-options-inputgroup-dest">
+            <label class="input-group-addon planner-options-input-addon required label-dest" for="planner-options-dest"><span class="glyphicon glyphicon-record"></span></label>
             <input id="planner-options-dest" type="text" title="To" aria-required="true" class="form-control" placeholder="Train station, bus stop, or address" x-webkit-speech="x-webkit-speech" required="required" />
             <input id="planner-options-dest-latlng" type="hidden" />
           </div>
           <div class="row">
             <div class="col-xs-12 col-sm-5 col-md-5 col-lg-5">
-              <div class="input-group input-group-lg planner-options-dateinput" id="planner-options-inputgroup-time">
+              <div class="input-group input-group-sm planner-options-dateinput" id="planner-options-inputgroup-time">
                 <label class="input-group-addon planner-options-input-addon label-time" for="planner-options-time">Time</label>
                 <input id="planner-options-time" type="time" title="Time" aria-described-by="planner-options-timeformat" aria-required="true" class="form-control" required="required" />
                 <div class="input-group-addon planner-options-input-addon" id="planner-options-timeformat">h:mma</div>
@@ -75,7 +75,7 @@
           <!-- row -->
           <div class="row">
             <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
-              <div class="input-group input-group-lg planner-options-dateinput" id="planner-options-inputgroup-date">
+              <div class="input-group input-group-sm planner-options-dateinput" id="planner-options-inputgroup-date">
                 <label class="input-group-addon planner-options-input-addon label-date" for="planner-options-date">Date</label>
                 <input id="planner-options-date" type="text" title="Date" aria-label="Datumkiezer, gebruik Ctrl en pijltjes om te navigeren" aria-required="true" class="form-control" required="required"  />
               </div>
