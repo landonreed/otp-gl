@@ -4,14 +4,6 @@ var geoJSON = {
     "type": "FeatureCollection",
     "features": [
     ]};
-var line = {
-    "type": "Feature",
-    "properties": {},
-    "geometry": {
-      "type": "MultiLineString",
-      "coordinates": []
-    }
-};
 
 function mapClick(e){
   console.log(e)
@@ -35,6 +27,23 @@ function mapClick(e){
   }
 
 }
+function getDisplay(data){
+  var display;
+  if (data.address.house)
+    display = data.address.house;
+  else if (data.address.building)
+    display = data.address.building;
+  else if (data.address.house_number)
+    display = data.address.house_number + " " + data.address.road
+  else if (data.address.road)
+    display = data.address.road + ', ' + data.address.city
+  else if (data.address.neighborhood)
+    display = data.address.neighborhood + ', ' + data.address.city + ', ' + data.address.state
+  else if (data.address.city)
+    display = data.address.city + ', ' + data.address.state
+  return display;
+}
+
 function reverseGeocode(point, id){
   this.url = 'http://nominatim.openstreetmap.org/reverse?';
   var params = {};
@@ -51,21 +60,7 @@ function reverseGeocode(point, id){
     data : params,
     success: function( data ) {
       console.log(data);
-
-      var display;
-      if (data.address.house)
-        display = data.address.house;
-      else if (data.address.building)
-        display = data.address.building;
-      else if (data.address.house_number)
-        display = data.address.house_number + " " + data.address.road
-      else if (data.address.road)
-        display = data.address.road + ', ' + data.address.city
-      else if (data.address.neighborhood)
-        display = data.address.neighborhood + ', ' + data.address.city + ', ' + data.address.state
-      else if (data.address.city)
-        display = data.address.city + ', ' + data.address.state
-
+      var display = getDisplay(data)
       
       $(id).val(display);
       
@@ -79,7 +74,8 @@ function reverseGeocode(point, id){
   })
 }
 function addMarker(point, title, symbol){
-
+  title = truncate(title, 60);
+  console.log(title)
   geoJSON.features.push({
           "type": "Feature",
           "geometry": {
@@ -133,7 +129,121 @@ mapboxgl.util.getJSON('https://www.mapbox.com/mapbox-gl-styles/styles/bright-v4.
     },
     "style": {
       "line-color": "#888",
-      "line-width": 8
+      "line-dasharray":[10, 4],
+      "line-width": 5,
+      "line-opacity":.5
+    },
+    "type": "line"
+  },
+  {
+    "id": "RED",
+    "source": "RED",
+    "render": {
+      "$type": "MultiLineString",
+      "line-join": "round",
+      "line-cap": "round"
+    },
+    "style": {
+      "line-color": "#FF0000",
+      "line-width": 5
+    },
+    "type": "line"
+  },
+  {
+    "id": "GOLD",
+    "source": "GOLD",
+    "render": {
+      "$type": "MultiLineString",
+      "line-join": "round",
+      "line-cap": "round"
+    },
+    "style": {
+      "line-color": "#ffd700",
+      "line-width": 5
+    },
+    "type": "line"
+  },
+  {
+    "id": "BLUE",
+    "source": "BLUE",
+    "render": {
+      "$type": "MultiLineString",
+      "line-join": "round",
+      "line-cap": "round"
+    },
+    "style": {
+      "line-color": "#0000FF",
+      "line-width": 5
+    },
+    "type": "line"
+  },
+  {
+    "id": "GREEN",
+    "source": "GREEN",
+    "render": {
+      "$type": "MultiLineString",
+      "line-join": "round",
+      "line-cap": "round"
+    },
+    "style": {
+      "line-color": "#009933",
+      "line-width": 5
+    },
+    "type": "line"
+  },
+  {
+    "id": "MARTA",
+    "source": "MARTA",
+    "render": {
+      "$type": "MultiLineString",
+      "line-join": "round",
+      "line-cap": "round"
+    },
+    "style": {
+      "line-color": "#f79044",
+      "line-width": 5
+    },
+    "type": "line"
+  },
+  {
+    "id": "GRTA",
+    "source": "GRTA",
+    "render": {
+      "$type": "MultiLineString",
+      "line-join": "round",
+      "line-cap": "round"
+    },
+    "style": {
+      "line-color": "#47bad5",
+      "line-width": 5
+    },
+    "type": "line"
+  },
+  {
+    "id": "CCT",
+    "source": "CCT",
+    "render": {
+      "$type": "MultiLineString",
+      "line-join": "round",
+      "line-cap": "round"
+    },
+    "style": {
+      "line-color": "#a53895",
+      "line-width": 5
+    },
+    "type": "line"
+  },
+  {
+    "id": "GCT",
+    "source": "GCT",
+    "render": {
+      "$type": "MultiLineString",
+      "line-join": "round",
+      "line-cap": "round"
+    },
+    "style": {
+      "line-color": "#9a0e34",
+      "line-width": 5
     },
     "type": "line"
   });
@@ -159,7 +269,7 @@ map = new mapboxgl.Map({
  opt = {
     autoOpen: false,
     position: { my: "center", at: "left top", of: window },
-    dialogClass: "no-close",
+    dialogClass: "no-close noTitleStuff transparent-bg",
     width: 400,
     // minHeight: 233,
     resizable: false,
@@ -198,10 +308,10 @@ map = new mapboxgl.Map({
   };
    itinOpt = {
     autoOpen: false,
-    position: { my: "center", at: "right top", of: window },
+    position: { my: "center", at: "left center-80", of: window },
     dialogClass: "no-close",
-    width: 600,
-    maxHeight: 600,
+    width: 400,
+    maxHeight: 400,
     // minHeight: 233,
     buttons: {
       "Close": function () {
@@ -481,6 +591,10 @@ function showForm(){
   $('#planner-options-form').attr('aria-hidden',false);
   $('#planner-options-form').show();
   $('#planner-options-desc-row').hide();
+  if ($( ".planner-advice-modal" ).dialog()){
+    $('.planner-advice-modal').dialog('close');
+  }
+
   $('#planner-options-desc-row').attr('aria-hidden',true);
   $('#planner-options-desc-row').addClass('hidden');
   $('#planner-advice-container').find('.alert').remove();
@@ -711,20 +825,67 @@ function legItem(leg){
 
 function renderItinerary(idx,moveto){
     $('#planner-leg-list').html('');
+    var lines = [];
     var itin = itineraries[idx];
+    var generic = {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "type": "MultiLineString",
+            "coordinates": []
+          }
+      };
     $.each( itin.legs , function( index, leg ){
+      var line = {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "type": "MultiLineString",
+            "coordinates": []
+          }
+      };
         var points = polyline.decode(leg.legGeometry.points)
-        $.each(points, function(i, point){
-          point = point.reverse();
-        })
         line.geometry.coordinates.push(points);
+        var route;
+        
+        
+        var name = 'route';
+        if(leg.route === "BLUE") {
+          name = leg.route;
+          route = new mapboxgl.GeoJSONSource({ data: line });
+        }
+        else if(leg.route === "GREEN") {
+          name = leg.route;
+          route = new mapboxgl.GeoJSONSource({ data: line });
+        }
+        else if(leg.route === "RED") {
+          name = leg.route;
+          route = new mapboxgl.GeoJSONSource({ data: line });
+        }
+        else if(leg.route === "GOLD") {
+          name = leg.route;
+          route = new mapboxgl.GeoJSONSource({ data: line });
+        }
+        else if (leg.agencyId == 'MARTA' || leg.agencyId == 'GRTA' || leg.agencyId == 'GCT' || leg.agencyId == 'CCT'){
+          name = leg.agencyId;
+          route = new mapboxgl.GeoJSONSource({ data: line });
+        }
+        else{
+          name = 'route';
+          generic.geometry.coordinates.push(points);
+          route = new mapboxgl.GeoJSONSource({ data: generic });
+        }
+        console.log(name)
+        lines.push({"name": name,"route": route})
+        // map.addSource(name, route);
         
         $('#planner-leg-list').append(legItem(leg));
+
         if (index == itin.legs.length - 1){
-          console.log("drawing legs")
-          console.log(line)
-          var route = new mapboxgl.GeoJSONSource({ data: line });
-          map.addSource('route', route);
+          $.each(lines, function(i, item){
+            map.addSource(item.name, item.route);
+          });
+          
         }
     });
     if ( moveto && $(this).width() < 981 ) {
@@ -788,7 +949,24 @@ function planItinerary(plannerreq){
   });
 
 }
-
+function getColor(leg){
+        if(mode === "WALK") return '#bbb';
+        else if(leg.route === "BLUE") return 'rgb(0, 0, 255)';
+        else if(leg.route === "GREEN") return 'rgb(0, 153, 51)';
+        else if(leg.route === "RED") return 'rgb(255, 0, 0)';
+        else if(leg.route === "GOLD") return 'rgb(255, 215, 0)';
+        else if(/MARTA/g.test(leg.agencyId)) return 'rgb(247, 144, 68)';
+        else if(/CCT/g.test(leg.agencyId)) return 'rgb(165, 56, 149)';
+        else if(/GCT/g.test(leg.agencyId)) return 'rgb(154, 14, 52)';
+        else if(leg.agencyId === "0") return 'rgb(154, 14, 52)';
+        else if(/GRTA/g.test(leg.agencyId)) return 'rgb(71, 168, 213)';
+        else if(mode === "BICYCLE") return 'rgb(68, 15, 0)';
+        else if(mode === "SUBWAY") return 'rgb(255, 0, 0)';
+        else if(mode === "RAIL") return 'rgb(176, 0, 0)';
+        else if(mode === "BUS") return 'rgb(0, 255, 0)';
+        else if(mode === "TRAM") return 'rgb(255, 0, 0)';
+        return '#aaa';
+}
 function makePlanRequest(){
   plannerreq = {}
   plannerreq.fromPlace = $('#planner-options-from-latlng').val();
@@ -800,15 +978,22 @@ function makePlanRequest(){
   plannerreq.arriveBy = false;
   return plannerreq;
 }
-
+function truncate(word, num){
+  if (word.length > num){
+    return word.substring(0, num) + '...';
+  }
+  else{
+    return word
+  }
+}
 function submit(){
   $('#planner-options-submit').button('loading');
   hideForm();
   $('#planner-options-desc').html('');
   var plannerreq = makePlanRequest();
   var summary = $('<p></p>');
-  summary.append('<b>'+Locale.from+'</b> '+plannerreq.fromName+'</br>');
-  summary.append('<b>'+Locale.to+'</b> '+plannerreq.toName);
+  summary.append('<b>'+Locale.from+'</b> '+truncate(plannerreq.fromName, 60)+'</br>');
+  summary.append('<b>'+Locale.to+'</b> '+truncate(plannerreq.toName, 60));
   $('#planner-options-desc').append(summary);
   $('#planner-options-desc').append('<p>'+getPrettyDate() +', '+getTime()+'</p>');
   if (parent && Modernizr.history){
@@ -1022,8 +1207,6 @@ function setupAutoComplete(){
         select: function( event, ui ) {
             $( "#planner-options-via" ).val( ui.item.label );
             $( "#planner-options-via-latlng" ).val( ui.item.latlng );
-            var point = ui.item.latlng.split(",")
-            addMarker({lat:Number(point[0]),lng:Number(point[1])}, ui.item.label, "circle")
             return false;
         }
         // ,
@@ -1052,6 +1235,8 @@ function setupAutoComplete(){
         select: function( event, ui ) {
             $( "#planner-options-dest" ).val( ui.item.label );
             $( "#planner-options-dest-latlng" ).val( ui.item.latlng );
+            var point = ui.item.latlng.split(",")
+            addMarker({lat:Number(point[0]),lng:Number(point[1])}, ui.item.label, "circle")
             return false;
         }
         // ,
