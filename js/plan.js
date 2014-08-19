@@ -273,36 +273,36 @@ map = new mapboxgl.Map({
     width: 400,
     // minHeight: 233,
     resizable: false,
-    buttons: [
-        {
-            text: "Clear",
-            click: function() { 
-              showForm();
-              window.location = window.location.pathname;
-            },
-            "class":"ui-button-danger"
-        },
-        {
-            text: "Back",
-            click: function() { 
-              showForm();
-            }        
-        },
-        // {
-        //     text: "other",
-        //     click: function() { 
-        //     },
-        //     "class":"ui-button-inverse"
-        // },
-        {
-            text: "Plan Trip!",
-            click: function() { 
-                submit();
-            },
-            "class":"ui-button-primary"
-        }
+    // buttons: [
+    //     {
+    //         text: "Clear",
+    //         click: function() { 
+    //           showForm();
+    //           window.location = window.location.pathname;
+    //         },
+    //         "class":"ui-button-danger"
+    //     },
+    //     {
+    //         text: "Back",
+    //         click: function() { 
+    //           showForm();
+    //         }        
+    //     },
+    //     // {
+    //     //     text: "other",
+    //     //     click: function() { 
+    //     //     },
+    //     //     "class":"ui-button-inverse"
+    //     // },
+    //     {
+    //         text: "Plan Trip!",
+    //         click: function() { 
+    //             submit();
+    //         },
+    //         "class":"ui-button-primary"
+    //     }
         
-    ],
+    // ],
     title: "Plan a trip"
 
   };
@@ -987,6 +987,9 @@ function truncate(word, num){
   }
 }
 function submit(){
+  $.each(map.sources, function(key, val){
+    if (key !== "mapbox" && key !=="markers"){map.removeSource(key);}
+  });
   $('#planner-options-submit').button('loading');
   hideForm();
   $('#planner-options-desc').html('');
@@ -1056,7 +1059,7 @@ function setTime(iso8601){
     if(Modernizr.inputtypes.time){
         $('#planner-options-time').val(iso8601.slice(0,5));
     }else{
-        var val = iso8601.split(':');
+        var val = iso8601.split('%3A');
         var secs = parseInt(val[0])*60*60+parseInt(val[1])*60;
         var hours = String(Math.floor(secs / (60 * 60)) % 24);
         var divisor_for_minutes = secs % (60 * 60);
