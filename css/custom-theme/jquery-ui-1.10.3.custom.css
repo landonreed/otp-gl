@@ -12,6 +12,16 @@
 
 /* Layout helpers
 ----------------------------------*/
+.noTitleStuff .ui-dialog-titlebar {
+	display:none;
+}
+
+.ui-autocomplete-loading { background:url('images/loading.gif') no-repeat right center }
+
+.transparent-bg .ui-widget-content .ui-dialog {
+	background-color: rgba(0, 0, 0, 0) !important;
+}
+
 .dialog-content * {
 	background-color: rgba(255, 255, 255, .3) !important;
 }
