@@ -1,0 +1,52 @@
+.noTitleStuff .ui-dialog-titlebar {
+	display:none;
+}
+
+.navbar .nav > li {
+z-index: 10000;
+}
+
+.mode-option{
+	padding: 0;
+}
+@media (max-width: 600px) {
+  .planner-options-inputgroup-dest.{
+  	width:20px !important;
+  }
+}
+
+@media (min-width: 600px) {
+  .planner-options-inputgroup-dest.{
+  	width:300px !important;
+  }
+}
+
+.svg-icon-pedestrian{
+	background-image: url(images/Pedestrian.svg);
+	background-position: left center;
+	background-size: 16px 16px;
+}
+.svg-icon-train{
+	background-image: url(images/Train.svg);
+}
+.svg-icon-bus{
+	background-image: url(images/Bus.svg);
+}
+.svg-icon-bike{
+	background-image: url(images/Bike.svg);
+}
+.svg-icon-car{
+	background-image: url(images/Car.svg);
+}
+.svg-icon-specialized{
+	background-image: url(images/Specialized.svg);
+}
+.ui-autocomplete-loading { background:url('images/loading.gif') no-repeat right center }
+
+.transparent-bg .ui-widget-content .ui-dialog {
+	background-color: rgba(0, 0, 0, 0) !important;
+}
+
+.dialog-content * {
+	background-color: rgba(255, 255, 255, .3) !important;
+}
