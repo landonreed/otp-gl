@@ -5,6 +5,11 @@ var geoJSON = {
     "features": [
     ]};
 
+    //// Code doesn't work!
+    // $(document).on('change', 'input:radio[name=mode-select]', function (event) {
+    //     alert("click fired");
+    // });
+
 function mapClick(e){
   console.log(e)
   var point = map.unproject(e.point)
@@ -73,9 +78,54 @@ function reverseGeocode(point, id){
     }
   })
 }
+function getBoundingBox (data) {
+    var bounds = {}, coords, point, latitude, longitude;
+
+    // We want to use the “features” key of the FeatureCollection (see above)
+    data = data.features;
+
+    // Loop through each “feature”
+    for (var i = 0; i < data.length; i++) {
+
+        // Pull out the coordinates of this feature
+        coords = data[i].geometry.coordinates[0];
+
+        // For each individual coordinate in this feature's coordinates…
+        for (var j = 0; j < coords.length; j++) {
+
+            longitude = coords[j][0];
+            latitude = coords[j][1];
+
+            // Update the bounds recursively by comparing the current
+            // xMin/xMax and yMin/yMax with the coordinate 
+            // we're currently checking
+            bounds.xMin = bounds.xMin < longitude ? bounds.xMin : longitude;
+            bounds.xMax = bounds.xMax > longitude ? bounds.xMax : longitude;
+            bounds.yMin = bounds.yMin < latitude ? bounds.yMin : latitude;
+            bounds.yMax = bounds.yMax > latitude ? bounds.yMax : latitude;
+        }
+
+    }
+
+    // Returns an object that contains the bounds of this GeoJSON
+    // data. The keys of this object describe a box formed by the
+    // northwest (xMin, yMin) and southeast (xMax, yMax) coordinates.
+    return bounds;
+}
+function maxBounds(bounds1, bounds2){
+  var bounds = {};
+  bounds.xMin = Math.max(bounds1.xMin, bounds2.xMin);
+  bounds.xMax = Math.max(bounds1.xMax, bounds2.xMax);
+  bounds.yMin = Math.max(bounds1.yMin, bounds2.yMin);
+  bounds.yMax = Math.max(bounds1.yMax, bounds2.yMax);
+  return bounds;
+}
 function addMarker(point, title, symbol){
   title = truncate(title, 60);
   console.log(title)
+  if (geoJSON.features.length > 0){
+    map.removeSource('markers', markers);
+  }
   geoJSON.features.push({
           "type": "Feature",
           "geometry": {
@@ -87,14 +137,25 @@ function addMarker(point, title, symbol){
             "marker-symbol": symbol
           }
         });
-  if (typeof markers !== 'undefined'){
-    map.removeSource('markers', markers);
-  }
+  
   markers = new mapboxgl.GeoJSONSource({ data: geoJSON });
 
   
   map.addSource('markers', markers);
-  map.flyTo(point, 13, 0, {duration:1000})
+  // if (geoJSON.features.length < 2){
+    map.flyTo(point, 13, 0, {duration:1000})
+  // }
+  // else{
+  //   geoJSON
+  //   // map.fitBounds(
+  //   //   [
+  //   //     [Math.min(geoJSON.features[0].geometry.coordinates[1],geoJSON.features[1].geometry.coordinates[1]),
+  //   //     Math.min(geoJSON.features[0].geometry.coordinates[0], geoJSON.features[1].geometry.coordinates[0])],
+  //   //     [Math.max(geoJSON.features[0].geometry.coordinates[1], geoJSON.features[1].geometry.coordinates[1]),
+  //   //     Math.max(geoJSON.features[0].geometry.coordinates[0], geoJSON.features[1].geometry.coordinates[0])]
+  //   //     ], {duration:1000})
+  //   map.setZoom(map.getZoom()-1)
+  // }
 }
 
 $(document).ready(function(){
@@ -103,38 +164,9 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiYXRscmVnaW9uYWwiLCJhIjoiQmZ6d2tyMCJ9.oENm3NSf
 mapboxgl.util.getJSON('https://www.mapbox.com/mapbox-gl-styles/styles/bright-v4.json', function (err, style) {
   if (err) throw err;
 
-  style.layers.push({
-    "id": "markers",
-    "source": "markers",
-    "type": "symbol",
-    "render": {
-      "icon-image": "{marker-symbol}-12",
-      "text-field": "{title}",
-      "text-font": "Open Sans Semibold, Arial Unicode MS Bold",
-      "text-offset": [0, 0.6],
-      "text-vertical-align": "top"
-    },
-    "style": {
-      "text-size": 12
-    }
-  });
+  
 
-  style.layers.push({
-    "id": "route",
-    "source": "route",
-    "render": {
-      "$type": "MultiLineString",
-      "line-join": "round",
-      "line-cap": "round"
-    },
-    "style": {
-      "line-color": "#888",
-      "line-dasharray":[10, 4],
-      "line-width": 5,
-      "line-opacity":.5
-    },
-    "type": "line"
-  },
+  style.layers.push(
   {
     "id": "RED",
     "source": "RED",
@@ -246,12 +278,44 @@ mapboxgl.util.getJSON('https://www.mapbox.com/mapbox-gl-styles/styles/bright-v4.
       "line-width": 5
     },
     "type": "line"
+  },
+  {
+    "id": "route",
+    "source": "route",
+    "render": {
+      "$type": "MultiLineString",
+      "line-join": "round",
+      "line-cap": "round"
+    },
+    "style": {
+      "line-color": "#888",
+      "line-dasharray":[10, 4],
+      "line-width": 5,
+      "line-opacity":.5
+    },
+    "type": "line"
+  }
+  );
+style.layers.push({
+    "id": "markers",
+    "source": "markers",
+    "type": "symbol",
+    "render": {
+      "icon-image": "{marker-symbol}-12",
+      "text-field": "{title}",
+      "text-font": "Open Sans Semibold, Arial Unicode MS Bold",
+      "text-offset": [0, 0.6],
+      "text-vertical-align": "top"
+    },
+    "style": {
+      "text-size": 12
+    }
   });
-
 map = new mapboxgl.Map({
   container: 'map', // container id
   style: style, //stylesheet location
   center: [33.7677129,-84.420604], // starting position
+  minZoom: 8,
   zoom: 11 // starting zoom
 });
 
@@ -268,41 +332,12 @@ map = new mapboxgl.Map({
 
  opt = {
     autoOpen: false,
-    position: { my: "center", at: "left top", of: window },
+    position: { my: "center", at: "left top+130", of: window },
     dialogClass: "no-close noTitleStuff transparent-bg",
-    width: 400,
+    width: 320,
+    maxHeight: 600,
     // minHeight: 233,
     resizable: false,
-    // buttons: [
-    //     {
-    //         text: "Clear",
-    //         click: function() { 
-    //           showForm();
-    //           window.location = window.location.pathname;
-    //         },
-    //         "class":"ui-button-danger"
-    //     },
-    //     {
-    //         text: "Back",
-    //         click: function() { 
-    //           showForm();
-    //         }        
-    //     },
-    //     // {
-    //     //     text: "other",
-    //     //     click: function() { 
-    //     //     },
-    //     //     "class":"ui-button-inverse"
-    //     // },
-    //     {
-    //         text: "Plan Trip!",
-    //         click: function() { 
-    //             submit();
-    //         },
-    //         "class":"ui-button-primary"
-    //     }
-        
-    // ],
     title: "Plan a trip"
 
   };
@@ -313,15 +348,19 @@ map = new mapboxgl.Map({
     width: 400,
     maxHeight: 400,
     // minHeight: 233,
-    buttons: {
-      "Close": function () {
-            $(this).dialog("close");
-        }        
-    },
+    buttons: [
+      {
+        text: "Close",
+        click: function() { 
+           $(this).dialog("close");
+        }
+      }
+    ],
+
     title: "Trip Itinerary"
 
   };
-  $('#modal-simple').dialog(opt).dialog('open');
+  // $('#modal-simple').dialog(opt).dialog('open');
 
 });
 
@@ -408,7 +447,7 @@ jQuery.unparam = function (value) {
     return params;
 };
 
-var currentTime = new Date();
+var currentTime = moment();
 
 var bag42 = function( request, response ) {
   $.ajax({
@@ -482,8 +521,8 @@ var nominatim_geocoder = function(request, response) {
 
       response( $.map( data, function( item ) {
       return {
-        label: item.display_name,
-        value: item.display_name,
+        label: item.display_name.split(', Georgia, United States of America')[0],
+        value: item.display_name.split(', Georgia, United States of America')[0],
         latlng: item.lat+','+item.lon
         }
       }));
@@ -508,6 +547,20 @@ function initializeForms(){
     if ($( "#planner-options-dest" ).val() == ''){
         $( "#planner-options-dest-latlng" ).val('');
     }
+    $('.mode-option').removeClass('active');
+    $('#train').parent().addClass('active');
+    $('.popover-dismiss').popover({
+        container: 'body',
+        html: true,
+        content: '<p>ARC\'s <a target="_blank" href="http://oneclick-arc.camsys-apps.com/">One-Click</a> combines data from this trip planner with services like <strong>MARTA Mobility</strong>, transport for veterans and disabled persons, and other on-demand services.</p><a target="_blank" href="http://oneclick-arc.camsys-apps.com/" type="button" class="center-block btn btn-primary">Visit the One-Click!</a>',
+        trigger: 'click',
+        title: 'Looking for specialized services?' + '<button type="button" onclick="$(\'.popover-dismiss\').popover(\'hide\');" class="close">&times;</button>'
+    });
+    $('.close').trigger('click', function(e){
+        $(".popover-dismiss").popover("hide");
+    });
+
+
 }
 
 function validate(){
@@ -571,19 +624,31 @@ function validate(){
     }
     return valid;
 }
-
+var itinDialog;
 function hideForm(){
-  $('.plannerpanel.planner-options').removeClass('planner-form').addClass('planner-summary');
-  $('#planner-options-form').attr('aria-hidden',true);
-  $('#planner-options-form').hide();
-  $('#planner-options-desc-row').show();
-  $('#planner-options-desc-row').attr('aria-hidden',false);
-  $('#planner-options-desc-row').removeClass('hidden');
-  $('#planner-advice-container').show();
+  // $('.plannerpanel.planner-options').removeClass('planner-form').addClass('planner-summary');
+  // $('#planner-options-form').attr('aria-hidden',true);
+  // $('#planner-options-form').hide();
+  // $('#planner-options-desc-row').show();
+  // $('#planner-options-desc-row').attr('aria-hidden',false);
+  // $('#planner-options-desc-row').removeClass('hidden');
+  // showResults();
+    $('#planner-advice-div').show();
+  $('#planner-advice-div').attr('aria-hidden',false);
+  $('#planner-advice-div').removeClass('hidden');
+  $('#hide-results').show();
   // opens modal on map
-  $('.planner-advice-modal').dialog(itinOpt).dialog('open');
-  $('#planner-advice-container').attr('aria-hidden',false);
-  $('#planner-advice-container').removeClass('hidden');
+  // if (typeof itinDialog == 'undefined'){
+  //   itinDialog = $('.planner-advice-modal').dialog(itinOpt).dialog('open');
+
+  // }
+  // else{
+  //   if (!$('.planner-advice-modal').dialog('isOpen')){
+  //     itinDialog = $('.planner-advice-modal').dialog(itinOpt).dialog('open');
+  //   }
+  // }
+
+  $('#hide-results').removeClass('hidden');
 }
 
 function showForm(){
@@ -594,18 +659,43 @@ function showForm(){
   if ($( ".planner-advice-modal" ).dialog()){
     $('.planner-advice-modal').dialog('close');
   }
-
+  hideResults();
+    $('#planner-advice-div').find('.alert').remove();
+  $('#planner-advice-div').hide();
+  $('#planner-advice-div').attr('aria-hidden',true);
+  $('#planner-advice-div').addClass('hidden');
   $('#planner-options-desc-row').attr('aria-hidden',true);
   $('#planner-options-desc-row').addClass('hidden');
+  $('#hide-results').hide();
+  $('#planner-options-submit').button('reset');
+}
+function hideResults(){
   $('#planner-advice-container').find('.alert').remove();
   $('#planner-advice-container').hide();
   $('#planner-advice-container').attr('aria-hidden',true);
   $('#planner-advice-container').addClass('hidden');
-  $('#planner-options-submit').button('reset');
-}
 
+}
+function showResults(){
+  $('#planner-advice-container').show();
+  $('#planner-advice-container').attr('aria-hidden',false);
+  $('#planner-advice-container').removeClass('hidden');
+
+}
+function toggleResults(){
+  if (!$('#planner-options-desc-row').hasClass('hidden')){
+    if ($('#planner-advice-container').hasClass('hidden')){
+      showResults();
+
+    }
+    else{
+      hideResults();
+    }
+  }
+}
 function getPrettyDate(){
    var date = getDate().split('-');
+   console.log(date)
    date = new Date(date[0],date[1]-1,date[2]);
    console.log(Locale.days[date.getDay()])
    return Locale.days[date.getDay()] + ' ' + Locale.months[date.getMonth()] + ' ' + date.getDate();
@@ -638,7 +728,6 @@ function epochtoIS08601time(epoch){
   var time = d.getHours().toString().lpad('0',2)+':'+d.getMinutes().toString().lpad('0',2)+':'+d.getSeconds().toString().lpad('0',2);
   return time;
 }
-
 function earlierAdvice(){
   if (!itineraries){
      return false;
@@ -656,7 +745,6 @@ function earlierAdvice(){
   console.log(minEpoch);
   plannerreq.date = epochtoIS08601date(minEpoch);
   plannerreq.time = epochtoIS08601time(minEpoch);
-
   var url = planningserver + jQuery.param(plannerreq);
   $.ajax({
       url: url,
@@ -666,27 +754,19 @@ function earlierAdvice(){
         if (!('itineraries' in data.plan) || data.plan.itineraries.length == 0){
           return;
         }
-        var startDate = $('#planner-advice-list').find('.planner-advice-dateheader').first().html();
+        // var startDate = $('#planner-advice-list').find('.planner-advice-dateheader').first().html();
         $.each( data.plan.itineraries , function( index, itin ){
-            var prettyStartDate = prettyDateEpoch(itin.startTime);
-            if (startDate != prettyStartDate){
-                $('<div class="planner-advice-dateheader">'+prettyStartDate+'</div>').insertAfter('#planner-advice-earlier');
-                startDate = prettyStartDate;
-            }
-            itinButton(itin).insertAfter($('#planner-advice-list').find('.planner-advice-dateheader').first());
+            // var prettyStartDate = prettyDateEpoch(itin.startTime);
+            // if (startDate != prettyStartDate){
+            //     $('<div class="planner-advice-dateheader">'+prettyStartDate+'</div>').insertAfter('#planner-advice-earlier');
+            //     startDate = prettyStartDate;
+            // }
+            // itinButton(itin).insertAfter($('#planner-advice-list').find('.planner-advice-dateheader').first());
         });
         $('#planner-advice-earlier').button('reset');
       }
   });
   return false;
-}
-
-function itinButton(itin){
-    var itinButton = $('<button type="button" class="btn btn-default" onclick="renderItinerary('+itineraries.length+',true)"></button>');
-    itineraries.push(itin);
-    itinButton.append('<b>'+timeFromEpoch(itin.startTime)+'</b>  <span class="glyphicon glyphicon-arrow-right"></span> <b>'+timeFromEpoch(itin.endTime)+'</b>');
-    itinButton.append('<div>'+Locale.amountTransfers(itin.transfers)+'</div>');
-    return itinButton;
 }
 
 function laterAdvice(){
@@ -715,16 +795,16 @@ function laterAdvice(){
         if (!('itineraries' in data.plan) || data.plan.itineraries.length == 0){
             return;
         }
-        var startDate = $('#planner-advice-list').find('.planner-advice-dateheader').last().html();
+        // var startDate = $('#planner-advice-list').find('.planner-advice-dateheader').last().html();
         $.each( data.plan.itineraries , function( index, itin ){
-            var prettyStartDate = prettyDateEpoch(itin.startTime);
-            if (startDate != prettyStartDate){
-                $(('<div class="planner-advice-dateheader">'+prettyStartDate+'</div>')).insertAfter($('#planner-advice-list').find('.planner-advice-itinbutton').last());
-                itinButton(itin).insertAfter($('#planner-advice-list').find('.planner-advice-dateheader').last());
-                startDate = prettyStartDate;
-            }else{
-                itinButton(itin).insertAfter($('#planner-advice-list').find('.planner-advice-itinbutton').last());
-            }
+            // var prettyStartDate = prettyDateEpoch(itin.startTime);
+            // if (startDate != prettyStartDate){
+            //     // $(('<div class="planner-advice-dateheader">'+prettyStartDate+'</div>')).insertAfter($('#planner-advice-list').find('.planner-advice-itinbutton').last());
+            //     // itinButton(itin).insertAfter($('#planner-advice-list').find('.planner-advice-dateheader').last());
+            //     // startDate = prettyStartDate;
+            // }else{
+            //     itinButton(itin).insertAfter($('#planner-advice-list').find('.planner-advice-itinbutton').last());
+            // }
         });
         $('#planner-advice-later').button('reset');
       }
@@ -738,12 +818,8 @@ function prettyDateEpoch(epoch){
 }
 
 function timeFromEpoch(epoch){
-  var date = new Date(epoch);
-  var minutes = date.getMinutes();
-  if (date.getSeconds()>= 30){
-      minutes += 1;
-  }
-  return String(date.getHours()).lpad('0',2)+':'+String(minutes).lpad('0',2);
+  var date = moment(epoch);
+  return date.format('hh:mm a');
 }
 
 var itineraries = null;
@@ -765,22 +841,31 @@ function legItem(leg){
     
 
     console.log(leg)
-    if (leg.mode == 'WALK'){
+    if (leg.mode == 'WALK' || leg.mode == 'CAR' || leg.mode == 'BICYCLE'){
         if (leg.from.name == leg.to.name){
             return;
         }
-        legItem.append('<div class="list-group-item-heading"><h4 class="leg-header"><b>'+Locale.walk+'</b></h4></div>');
+        if (leg.mode == 'CAR'){
+          leg.mode = 'Drive';
+        }
+        else if (leg.mode == 'BICYCLE'){
+          leg.mode = 'Bike';
+        }
+        legItem.append('<div class="list-group-item-heading"><h4 class="leg-header"><b>'+toTitleCase(leg.mode)+'</b></h4></div>');
     } else {
       var headsign = leg.routeLongName;
       if (leg.headsign !== null)
-        headsign = leg.headsign;
-      var headsignParts = headsign.split(" ")
+        headsign = toTitleCase(leg.headsign);
+      else{
+        headsign = "";
+      }
+      var headsignParts = headsign ? headsign.split(" ") : ""
       if (headsignParts[0] === leg.route || headsignParts[0] === "MARTA"){
         headsign = headsign.slice(headsignParts[0].length, headsign.length)
       }
-      legItem.append('<div class="list-group-item-heading"><h4 class="leg-header"><b>'+leg.route+'</b> '+toTitleCase(headsign)+'<span class="leg-header-agency-name"><small>'+leg.agencyId+'</small></span></h4>');
+      legItem.append('<div class="list-group-item-heading"><h4 class="leg-header"><b>'+leg.route+'</b> '+headsign+'<span class="leg-header-agency-name"><small>'+leg.agencyId+'</small></span></h4>');
     }
-    var startTime = timeFromEpoch(leg.startTime-(leg.departureDelay ? leg.departureDelay : 0)*1000);
+    var startTime = moment(leg.startTime-(leg.departureDelay ? leg.departureDelay : 0)).format("hh:mm a");
     var delayMin = (leg.departureDelay/60)|0;
     if ((leg.departureDelay%60)>=30){
         delayMin += 1;
@@ -793,7 +878,7 @@ function legItem(leg){
         startTime += '<span class="ontime"> ✓</span>';
     }
 
-    var endTime = timeFromEpoch(leg.endTime-(leg.arrivalDelay ? leg.arrivalDelay : 0)*1000);
+    var endTime = moment(leg.endTime-(leg.arrivalDelay ? leg.arrivalDelay : 0)).format("hh:mm a");
     var delayMin = (leg.arrivalDelay/60)|0;
     if ((leg.arrivalDelay%60)>=30){
         delayMin += 1;
@@ -822,10 +907,13 @@ function legItem(leg){
     }
     return legItem;
 }
-
+var lines;
 function renderItinerary(idx,moveto){
+  $.each(map.sources, function(key, val){
+    if (key !== "mapbox" && key !=="markers"){map.removeSource(key);}
+  });
     $('#planner-leg-list').html('');
-    var lines = [];
+    lines = {};
     var itin = itineraries[idx];
     var generic = {
           "type": "Feature",
@@ -846,63 +934,94 @@ function renderItinerary(idx,moveto){
       };
         var points = polyline.decode(leg.legGeometry.points)
         line.geometry.coordinates.push(points);
-        var route;
+        
         
         
         var name = 'route';
-        if(leg.route === "BLUE") {
+        if(leg.route === "BLUE" || leg.route === "GREEN" || leg.route === "RED" || leg.route === "GOLD") {
           name = leg.route;
-          route = new mapboxgl.GeoJSONSource({ data: line });
-        }
-        else if(leg.route === "GREEN") {
-          name = leg.route;
-          route = new mapboxgl.GeoJSONSource({ data: line });
-        }
-        else if(leg.route === "RED") {
-          name = leg.route;
-          route = new mapboxgl.GeoJSONSource({ data: line });
-        }
-        else if(leg.route === "GOLD") {
-          name = leg.route;
-          route = new mapboxgl.GeoJSONSource({ data: line });
+          if ( lines[name]){
+            lines[name].geometry.coordinates.push(points)
+          }
+          else{
+            lines[name] = line;
+          }
         }
         else if (leg.agencyId == 'MARTA' || leg.agencyId == 'GRTA' || leg.agencyId == 'GCT' || leg.agencyId == 'CCT'){
           name = leg.agencyId;
-          route = new mapboxgl.GeoJSONSource({ data: line });
+          if ( lines[name]){
+            lines[name].geometry.coordinates.push(points)
+          }
+          else{
+            lines[name] = line;
+          }
         }
         else{
           name = 'route';
-          generic.geometry.coordinates.push(points);
-          route = new mapboxgl.GeoJSONSource({ data: generic });
+          if ( lines[name]){
+            lines[name].geometry.coordinates.push(points)
+          }
+          else{
+            lines[name] = line;
+          }
         }
         console.log(name)
-        lines.push({"name": name,"route": route})
+        
         // map.addSource(name, route);
         
         $('#planner-leg-list').append(legItem(leg));
-
+        var bounds;
+        var max;
         if (index == itin.legs.length - 1){
-          $.each(lines, function(i, item){
-            map.addSource(item.name, item.route);
+          console.log("HERE!")
+          $.each(lines, function(i, line){
+            
+            // if (typeof bounds == undefined){
+            //   console.log(line)
+            //   bounds = getBoundingBox(line);
+            // }
+            // else{
+            //   console.log(line)
+            //   bounds = maxBounds(bounds, getBoundingBox(line));
+            // }
+            console.log(i)
+            var route = new mapboxgl.GeoJSONSource({ data: line });
+            map.addSource(i, route);
+            // map.fitBounds([[bounds.minLat, bounds.minLng],[bounds.maxLat, bounds.maxLng]])
           });
           
         }
     });
-    if ( moveto && $(this).width() < 981 ) {
-        $('#planner-leg-list').ScrollTo({
-            duration: 500,
-            easing: 'linear'
-        });
-    }
+
     $('#planner-advice-list').find('.btn').removeClass('active');
     $(this).addClass('active');
 }
-
+$(document).on('ready', function(){
+      var win = $(this); //this = window
+      if (win.width() >= 750) { $('.planner-options-form').removeClass('form-inline'); }
+      else { $('.planner-options-form').addClass('form-inline'); }
+});
+$(window).on('resize', function(){
+      var win = $(this); //this = window
+      if (win.width() >= 750) { $('.planner-options-form').removeClass('form-inline'); }
+      else { $('.planner-options-form').addClass('form-inline'); }
+});
 function itinButton(itin){
-    var itinButton = $('<button type="button" class="btn btn-default planner-advice-itinbutton" onclick="renderItinerary('+itineraries.length+',true)"></button>');
+    var itinButton = $('<button type="button" class="btn btn-xs btn-default planner-advice-itinbutton" onclick="renderItinerary('+itineraries.length+',true)"></button>');
     itineraries.push(itin);
-    itinButton.append('<b>'+timeFromEpoch(itin.startTime)+'</b>  <span class="glyphicon glyphicon-arrow-right"></span> <b>'+timeFromEpoch(itin.endTime)+'</b>');
-    itinButton.append('<div>'+Locale.amountTransfers(itin.transfers)+'</div>');
+    var start = moment(itin.startTime)
+    var end = moment(itin.endTime)
+    var diff = end.diff(start, 'minutes')
+    var minutes = diff%60;
+    var hours = Math.floor(diff/60)
+    var diffDisplay = hours ? hours + ' hr ' + minutes + ' min' : minutes + ' min'
+    var itinSummary = '';
+    $.each(itin.legs, function(i, leg){
+      var text = leg.mode == 'WALK' ? leg.mode : leg.agencyId
+      itinSummary += i == itin.legs.length - 1 ? text : text + '<span class="glyphicon glyphicon-arrow-right"></span>';
+    });
+    itinButton.append('<div class="text-left"><b>'+timeFromEpoch(itin.startTime)+'</b>  <span class="glyphicon glyphicon-arrow-right"></span> <b>'+timeFromEpoch(itin.endTime)+'</b> | '+Locale.amountTransfers(itin.transfers)+ ' | ' + diffDisplay + " | " + itinSummary + '</div>');
+    // itinButton.append('<div class="text-left">'+Locale.amountTransfers(itin.transfers)+ ' | ' + diffDisplay + '</div>');
     return itinButton;
 }
 
@@ -933,11 +1052,11 @@ function planItinerary(plannerreq){
         var startDate = null;
         // $('#planner-advice-list').append('<button type="button" class="btn btn-primary" id="planner-advice-earlier" data-loading-text="'+Locale.loading+'" onclick="earlierAdvice()">'+Locale.earlier+'</button>');
         $.each( data.plan.itineraries , function( index, itin ){
-            var prettyStartDate = prettyDateEpoch(itin.startTime);
-            if (startDate != prettyStartDate){
-                $('#planner-advice-list').append('<div class="planner-advice-dateheader">'+prettyStartDate+'</div>');
-                startDate = prettyStartDate;
-            }
+            // var prettyStartDate = prettyDateEpoch(itin.startTime);
+            // if (startDate != prettyStartDate){
+            //     $('#planner-advice-list').append('<div class="planner-advice-dateheader">'+prettyStartDate+'</div>');
+            //     startDate = prettyStartDate;
+            // }
             $('#planner-advice-list').append(itinButton(itin));
         });
         // $('#planner-advice-list').append('<button type="button" class="btn btn-primary" id="planner-advice-later" data-loading-text="'+Locale.loading+'" onclick="laterAdvice()">'+Locale.later+'</button>');
@@ -973,6 +1092,7 @@ function makePlanRequest(){
   plannerreq.fromName = $('#planner-options-from').val();
   plannerreq.toPlace = $('#planner-options-dest-latlng').val();
   plannerreq.toName = $('#planner-options-dest').val();
+  plannerreq.mode = $('input[name=mode-select]:checked').val()
   plannerreq.time = getTime();
   plannerreq.date = getDate();
   plannerreq.arriveBy = false;
@@ -987,6 +1107,7 @@ function truncate(word, num){
   }
 }
 function submit(){
+  // Remove lines when redrawing 
   $.each(map.sources, function(key, val){
     if (key !== "mapbox" && key !=="markers"){map.removeSource(key);}
   });
@@ -995,8 +1116,8 @@ function submit(){
   $('#planner-options-desc').html('');
   var plannerreq = makePlanRequest();
   var summary = $('<p></p>');
-  summary.append('<b>'+Locale.from+'</b> '+truncate(plannerreq.fromName, 60)+'</br>');
-  summary.append('<b>'+Locale.to+'</b> '+truncate(plannerreq.toName, 60));
+  summary.append('<b>'+Locale.from+'</b> '+truncate(plannerreq.fromName, 42)+'</br>');
+  summary.append('<b>'+Locale.to+'</b> '+truncate(plannerreq.toName, 42));
   $('#planner-options-desc').append(summary);
   $('#planner-options-desc').append('<p>'+getPrettyDate() +', '+getTime()+'</p>');
   if (parent && Modernizr.history){
@@ -1004,8 +1125,27 @@ function submit(){
     history.pushState(plannerreq, document.title, window.location.href);
     planItinerary(plannerreq);
   }
+  // $('#planner-options-desc').children()[0].click(function(){
+  //   showForm();
+  // });
 }
-
+function clearHash(){
+  history.pushState({id: "base"}, document.title, '{{ site.baseurl }}/plan/otp/');
+  $.each(map.sources, function(id, source){
+    if (id !== 'mapbox'){
+      map.removeSource(id);
+    }
+    geoJSON = {
+    "type": "FeatureCollection",
+    "features": [
+    ]};
+    initializeForms();
+    $( "#planner-options-from" ).val('');
+    $( "#planner-options-dest" ).val('');
+    $('#planner-advice-list').html('');
+    showForm();
+  })
+}
 function restoreFromHash(){
     var plannerreq = jQuery.unparam(window.location.hash);
     if ('time' in plannerreq){
@@ -1025,6 +1165,10 @@ function restoreFromHash(){
     }
     if ('toName' in plannerreq){
         $('#planner-options-dest').val(plannerreq['toName']);
+    }
+    if ('mode' in plannerreq){
+        $('#train').parent().removeClass('active')
+        $('input[type=radio][value="' + plannerreq.mode + '"]').prop('checked', true).parent().addClass('active');
     }
     if ('toPlace' in plannerreq){
         $('#planner-options-dest-latlng').val(plannerreq['toPlace']);
@@ -1054,19 +1198,21 @@ function setupSubmit(){
        if (validate()){submit();}
     });
 };
-
+var input;
 function setTime(iso8601){
-    if(Modernizr.inputtypes.time){
-        $('#planner-options-time').val(iso8601.slice(0,5));
-    }else{
-        var val = iso8601.split('%3A');
-        var secs = parseInt(val[0])*60*60+parseInt(val[1])*60;
-        var hours = String(Math.floor(secs / (60 * 60)) % 24);
-        var divisor_for_minutes = secs % (60 * 60);
-        var minutes = String(Math.floor(divisor_for_minutes / 60));
-        var time = hours.lpad('0',2)+':'+minutes.lpad('0',2);
-        $('#planner-options-time').val(time);
-    }
+    // if(Modernizr.inputtypes.time){
+    //     $('#planner-options-time').val(iso8601.slice(0,5));
+    // }else{
+      console.log(iso8601)
+         input = moment(iso8601, "hh:mm a");
+        // var secs = parseInt(val[0])*60*60+parseInt(val[1])*60;
+        // var hours = String(Math.floor(secs / (60 * 60)) % 24);
+        // var divisor_for_minutes = secs % (60 * 60);
+        // var minutes = String(Math.floor(divisor_for_minutes / 60));
+        console.log(input.format("HH:mm"))
+
+        $('#planner-options-time').val(input.format("HH:mm"));
+    // }
 }
 
 
@@ -1075,9 +1221,9 @@ function setupDatetime(){
         $('#planner-options-timeformat').hide();
         $('#planner-options-timeformat').attr('aria-hidden',true);
     }
-    setTime(String(currentTime.getHours()).lpad('0',2)+':'+String(currentTime.getMinutes()).lpad('0',2));
+    setTime(currentTime);
     function pad(n) { return n < 10 ? '0' + n : n }
-    var date = currentTime.getFullYear() + '-' + pad(currentTime.getMonth() + 1) + '-' + pad(currentTime.getDate());
+    var date = currentTime.year() + '-' + pad(currentTime.month() + 1) + '-' + pad(currentTime.date());
     setDate(date);
     $("#planner-options-date").datepicker( {
        dateFormat: Locale.dateFormat,
@@ -1104,61 +1250,42 @@ function setupDatetime(){
 
 function setDate(iso8601){
     parts = iso8601.split('-');
-    var d = new Date(parts[0],parseInt(parts[1])-1,parts[2]);
-    $('#planner-options-date').val(String((d.getMonth()+1)).lpad('0',2) + '-' + String(d.getDate()).lpad('0',2) + '-' + String(d.getFullYear()));
+    var d = moment(iso8601);
+    $('#planner-options-date').val(d.format('MM-DD-YYYY'));
 }
 
 function getDate(){
-    var elements = $('#planner-options-date').val().split('-');
-    var month = null;
-    var day = null;
-    var year = String(currentTime.getFullYear());
-    if (elements.length == 3){
-      if (elements[2].length == 2){
-        year = year.slice(0,2) + elements[2];
-      }else if (elements[2].length == 4){
-        year = elements[2];
-      }
-      if (parseInt(year) < 2013){
-        return null;
-      }
-    }
-    if (parseInt(elements[0]) >= 1 && parseInt(elements[0]) <= 12){
-      month = elements[0];
-    }else{
-      return null;
-    }
-    if (parseInt(elements[1]) >= 1 && parseInt(elements[1]) <= 31){
-      day = elements[1];
-    }else{
-      return null;
-    }
+    return moment($('#planner-options-date').val()).format("YYYY-MM-DD");
+    console.log(elements)
+    var month = currentTime.day();
+    var day = currentTime.month();
+    var year = String(currentTime.year());
     setDate(year+'-'+month+'-'+day);
     return year+'-'+month+'-'+day;
 }
 
 function getTime(){
-    if(Modernizr.inputtypes.time){
-        var time = moment($('#planner-options-time').val(), "hh:mm");
-        return time.format(Locale.timeFormat)
-    } else {
-        var val = $('#planner-options-time').val().split(':');
-        if (val.length == 1 && val[0].length <= 2 && !isNaN(parseInt(val[0]))){
-            var hours = val[0];
-            var time = hours.lpad('0',2)+':00';
-            $('#planner-options-time').val(time);
-            return time;
-        }else if (val.length == 2 && !isNaN(parseInt(val[0])) && !isNaN(parseInt(val[1]))){
-            var secs = parseInt(val[0])*60*60+parseInt(val[1])*60;
-            var hours = String(Math.floor(secs / (60 * 60)) % 24);
-            var divisor_for_minutes = secs % (60 * 60);
-            var minutes = String(Math.floor(divisor_for_minutes / 60));
-            var time = hours.lpad('0',2)+':'+minutes.lpad('0',2);
-            $('#planner-options-time').val(time);
-            return time;
-        }
-        return null;
-    }
+    // if(Modernizr.inputtypes.time){
+        var time = moment($('#planner-options-time').val(), "HH:mm");
+        return time.format("hh:mm a")
+    // } else {
+    //     var val = $('#planner-options-time').val().split(':');
+    //     if (val.length == 1 && val[0].length <= 2 && !isNaN(parseInt(val[0]))){
+    //         var hours = val[0];
+    //         var time = hours.lpad('0',2)+':00';
+    //         $('#planner-options-time').val(time);
+    //         return time;
+    //     }else if (val.length == 2 && !isNaN(parseInt(val[0])) && !isNaN(parseInt(val[1]))){
+    //         var secs = parseInt(val[0])*60*60+parseInt(val[1])*60;
+    //         var hours = String(Math.floor(secs / (60 * 60)) % 24);
+    //         var divisor_for_minutes = secs % (60 * 60);
+    //         var minutes = String(Math.floor(divisor_for_minutes / 60));
+    //         var time = hours.lpad('0',2)+':'+minutes.lpad('0',2);
+    //         $('#planner-options-time').val(time);
+    //         return time;
+    //     }
+    //     return null;
+    // }
 }
 
 function setupAutoComplete(){
@@ -1190,34 +1317,6 @@ function setupAutoComplete(){
         //         ui.content[0].label.toLowerCase().indexOf( $( "#planner-options-from" ).val().toLowerCase() ) === 0 ) {
         //       $( "#planner-options-from" ).val( ui.content[0].label );
         //       $( "#planner-options-from-latlng" ).val( ui.content[0].latlng );
-        //    }
-        // }
-    });
-    $( "#planner-options-via" ).autocomplete({
-        autoFocus: true,
-        minLength: 3,
-        //appendTo: "#planner-options-via-autocompletecontainer",
-        messages : Locale.autocompleteMessages,
-        source: Geocoder.geocoder,
-        search: function( event, ui ) {
-            $( "#planner-options-from-latlng" ).val( "" );
-        },
-        focus: function( event, ui ) {
-            //$( "#planner-options-via" ).val( ui.item.label );
-            //$( "#planner-options-via-latlng" ).val( ui.item.latlng );
-            return false;
-        },
-        select: function( event, ui ) {
-            $( "#planner-options-via" ).val( ui.item.label );
-            $( "#planner-options-via-latlng" ).val( ui.item.latlng );
-            return false;
-        }
-        // ,
-        // response: function( event, ui ) {
-        //    if ( ui.content.length === 1 &&
-        //         ui.content[0].label.toLowerCase().indexOf( $( "#planner-options-via" ).val().toLowerCase() ) === 0 ) {
-        //       $( "#planner-options-via" ).val( ui.content[0].label );
-        //       $( "#planner-options-via-latlng" ).val( ui.content[0].latlng );
         //    }
         // }
     });
@@ -1254,15 +1353,15 @@ function setupAutoComplete(){
 }
 
 function switchLocale() {
-	$(".label-from").text(Locale.from);
-	$(".label-via").text(Locale.via);
-	$(".label-dest").text(Locale.to);
-	$(".label-time").text(Locale.time);
-	$(".label-date").text(Locale.date);
-	$(".label-edit").text(Locale.edit);
-	$(".label-plan").text(Locale.plan);
+  $(".label-from").text(Locale.from);
+  $(".label-via").text(Locale.via);
+  $(".label-dest").text(Locale.to);
+  $(".label-time").text(Locale.time);
+  $(".label-date").text(Locale.date);
+  $(".label-edit").text(Locale.edit);
+  $(".label-plan").text(Locale.plan);
 
-	$(".planner-options-timeformat").text(Locale.timeFormat);
+  $(".planner-options-timeformat").text(Locale.timeFormat);
 
   // $("#planner-options-date").datepicker('option', {
   //     dateFormat: Locale.dateFormat, 
@@ -1272,8 +1371,8 @@ function switchLocale() {
   // });
 
   $("#planner-options-date").attr('aria-label', Locale.dateAriaLabel);
-	$("#planner-options-from").attr('placeholder', Locale.geocoderInput).attr('title', Locale.from);
-	$("#planner-options-via").attr('placeholder', Locale.geocoderInput).attr('title', Locale.via);
-	$("#planner-options-dest").attr('placeholder', Locale.geocoderInput).attr('title', Locale.to);
-	$("#planner-options-submit").attr('data-loading-text', Locale.loading);
+  $("#planner-options-from").attr('placeholder', Locale.geocoderInput).attr('title', Locale.from);
+  $("#planner-options-via").attr('placeholder', Locale.geocoderInput).attr('title', Locale.via);
+  $("#planner-options-dest").attr('placeholder', Locale.geocoderInput).attr('title', Locale.to);
+  $("#planner-options-submit").attr('data-loading-text', Locale.loading);
 }
